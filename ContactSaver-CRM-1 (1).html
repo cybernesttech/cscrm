@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>ContactSaver CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0c0c0b;--bg2:#111110;--surface:#161615;--surface2:#1c1c1a;
+  --border:#272725;--border2:#323230;--text:#f0ede8;--text2:#c8c4bc;--muted:#6b6860;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold-dim:rgba(201,168,76,.12);--gold-border:rgba(201,168,76,.25);
+  --green:#3d9e6b;--green-dim:rgba(61,158,107,.1);--red:#c0544a;--red-dim:rgba(192,84,74,.1);
+  --team:#7b6cad;--team-dim:rgba(123,108,173,.1);--orange:#d4845a;--orange-dim:rgba(212,132,90,.1);
+  --radius:10px;--radius-lg:14px;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;font-size:14px;line-height:1.55;}
+input,textarea,button,select{font-family:'Instrument Sans',sans-serif;}
+button{cursor:pointer;}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;}
+.load-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--gold);letter-spacing:2px;}
+.load-sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:99px;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Auth */
+#auth-screen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;background:var(--bg);}
+.auth-wrap{width:100%;max-width:360px;}
+.auth-mark{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:500;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:48px;display:block;}
+.auth-heading{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:500;line-height:1.1;color:var(--text);margin-bottom:10px;letter-spacing:-.5px;}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:36px;line-height:1.7;}
+.auth-features{margin-bottom:32px;}
+.auth-feat{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.auth-feat:last-child{border-bottom:none;}
+.feat-dot{width:5px;height:5px;border-radius:99px;background:var(--gold);margin-top:8px;flex-shrink:0;}
+.feat-text{font-size:12px;color:var(--text2);line-height:1.5;}
+.btn-google{width:100%;padding:13px 18px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--text);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;}
+.btn-google:hover{background:var(--surface2);border-color:var(--gold-border);}
+.auth-note{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.7;text-align:center;}
+
+/* App */
+#app-screen{display:none;min-height:100vh;}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200;}
+.top-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);letter-spacing:1.5px;}
+.top-right{display:flex;align-items:center;gap:10px;}
+.user-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border:1px solid var(--border);border-radius:99px;font-size:11px;color:var(--muted);}
+.user-av{width:22px;height:22px;border-radius:99px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.user-av img{width:100%;height:100%;object-fit:cover;}
+.btn-ghost{padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;font-size:11px;color:var(--muted);}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text2);}
+.count-chip{background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:10px;padding:2px 9px;border-radius:99px;font-weight:600;}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 100px;}
+
+/* Tabs */
+.tab-bar{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px;margin-bottom:22px;flex-wrap:wrap;overflow-x:auto;}
+.tab-btn{flex:1;min-width:52px;padding:8px 5px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:500;cursor:pointer;white-space:nowrap;letter-spacing:.4px;text-transform:uppercase;font-family:'Instrument Sans',sans-serif;}
+.tab-btn.active{background:var(--surface2);color:var(--gold);border:1px solid var(--gold-border);}
+.hidden{display:none!important;}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:14px;}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.hint{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;}
+
+/* Forms */
+.lbl{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.8px;text-transform:uppercase;}
+.inp{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:9px 12px;outline:none;transition:border .15s;}
+.inp:focus{border-color:var(--gold-border);background:var(--surface);}
+.inp.err{border-color:var(--red)!important;}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.55;}
+.fg{margin-bottom:12px;}
+.errmsg{color:var(--red);font-size:10px;margin-top:4px;display:none;}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Buttons */
+.btn{padding:9px 16px;border-radius:8px;border:none;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;letter-spacing:.2px;font-family:'Instrument Sans',sans-serif;white-space:nowrap;}
+.btn:hover{opacity:.85;}
+.btn-p{background:var(--gold);color:var(--bg);}
+.btn-s{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+.btn-d{background:var(--red-dim);color:var(--red);border:1px solid rgba(192,84,74,.2);}
+.btn-team{background:var(--team-dim);color:var(--team);border:1px solid rgba(123,108,173,.2);}
+.btn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(61,158,107,.2);}
+.btn-xs{padding:4px 9px;font-size:10px;border-radius:6px;}
+
+/* Contact Cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;position:relative;transition:border-color .15s;cursor:pointer;}
+.cc:hover{border-color:var(--border2);}
+.cc.team-card{border-color:rgba(123,108,173,.3);background:var(--team-dim);}
+.cc.dup-card{border-color:rgba(192,84,74,.3);}
+.cc.selected{border-color:var(--gold)!important;background:var(--gold-dim)!important;}
+.c-init{width:34px;height:34px;border-radius:99px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-family:'Cormorant Garamond',serif;}
+.cc.team-card .c-init{background:var(--team-dim);border-color:rgba(123,108,173,.3);color:var(--team);}
+.cname{font-size:13px;font-weight:600;margin-bottom:4px;padding-right:44px;line-height:1.3;}
+.cdet{font-size:11px;color:var(--muted);margin-bottom:2px;display:flex;align-items:center;gap:6px;}
+.cacts{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap;}
+.c-badge{position:absolute;top:11px;right:11px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;}
+.badge-team{background:var(--team-dim);color:var(--team);}
+.badge-dup{background:var(--red-dim);color:var(--red);}
+
+/* Selection */
+.cc .chk-wrap{display:none;position:absolute;top:10px;left:10px;}
+.selection-mode .cc .chk-wrap{display:flex;}
+.chk-box{width:18px;height:18px;border-radius:5px;border:2px solid var(--border2);background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cc.selected .chk-box{background:var(--gold);border-color:var(--gold);}
+.chk-box::after{content:'✓';font-size:11px;color:var(--bg);display:none;font-weight:700;}
+.cc.selected .chk-box::after{display:block;}
+.sel-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border2);padding:12px 16px;display:none;z-index:500;gap:8px;flex-wrap:wrap;align-items:center;}
+.sel-bar.active{display:flex;}
+.sel-count{font-size:12px;color:var(--muted);flex:1;font-weight:600;}
+
+/* Status badges */
+.status-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;display:inline-block;}
+.s-lead{background:rgba(201,168,76,.15);color:var(--gold);}
+.s-contacted{background:rgba(61,158,107,.15);color:var(--green);}
+.s-qualified{background:rgba(123,108,173,.15);color:var(--team);}
+.s-proposal{background:rgba(212,132,90,.15);color:var(--orange);}
+.s-won{background:rgba(61,158,107,.2);color:var(--green);}
+.s-lost{background:rgba(192,84,74,.15);color:var(--red);}
+
+/* Priority */
+.prio-dot{width:7px;height:7px;border-radius:99px;display:inline-block;flex-shrink:0;}
+.prio-hot{background:#e55;}
+.prio-warm{background:var(--gold);}
+.prio-cold{background:#6af;}
+
+/* Tags */
+.tag{font-size:9px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);}
+.tags-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+
+/* Stats */
+.statsrow{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.statbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;flex:1;min-width:80px;}
+.statnum{font-size:22px;font-weight:600;font-family:'Cormorant Garamond',serif;color:var(--gold);}
+.statlbl{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
+
+/* Pipeline */
+.pipeline{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;}
+.pipeline-col{min-width:200px;flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;}
+.pipeline-col-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.pipeline-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.pipeline-card:hover{border-color:var(--border2);}
+.pipeline-card .pc-name{font-size:12px;font-weight:600;margin-bottom:3px;}
+.pipeline-card .pc-co{font-size:10px;color:var(--muted);}
+.pipeline-card .pc-val{font-size:11px;color:var(--green);margin-top:5px;font-weight:600;}
+.pipeline-val-total{font-size:10px;color:var(--green);font-weight:600;}
+.empty-col{font-size:11px;color:var(--muted);text-align:center;padding:16px 0;opacity:.6;}
+
+/* Analytics */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+.a-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+.a-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}
+.funnel-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.funnel-label{font-size:11px;color:var(--text2);width:80px;flex-shrink:0;}
+.funnel-bar-wrap{flex:1;background:var(--bg2);border-radius:99px;height:6px;overflow:hidden;}
+.funnel-bar{height:100%;border-radius:99px;background:var(--gold);transition:width .4s;}
+.funnel-count{font-size:10px;color:var(--muted);width:24px;text-align:right;}
+
+/* Filter bar */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:14px;display:none;}
+.filter-bar.open{display:block;}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.filter-row:last-child{margin-bottom:0;}
+.filter-chip{padding:5px 11px;border-radius:99px;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.filter-chip.active{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);}
+.active-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.active-filter-chip{padding:3px 10px;border-radius:99px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-size:10px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.active-filter-chip button{background:none;border:none;color:var(--gold);font-size:11px;padding:0;cursor:pointer;line-height:1;}
+
+/* Drop zones */
+.dz{border:1px dashed var(--border2);border-radius:var(--radius);padding:24px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;transition:all .15s;}
+.dz:hover{border-color:var(--gold-border);background:var(--gold-dim);color:var(--gold2);}
+.dz-icon{font-size:26px;margin-bottom:7px;opacity:.6;}
+.dz-title{font-weight:600;font-size:13px;margin-bottom:3px;}
+.dz-sub{font-size:11px;opacity:.7;}
+.uprow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* Key row */
+.keyrow{background:var(--green-dim);border:1px solid rgba(61,158,107,.2);border-radius:var(--radius);padding:11px 14px;margin-bottom:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.keyinp{flex:1;min-width:140px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;padding:7px 10px;outline:none;font-family:'Instrument Sans',monospace;}
+
+/* Status box */
+.sbox{margin-top:10px;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.5;display:none;}
+.sbox.ok{background:var(--green-dim);border:1px solid rgba(61,158,107,.2);color:var(--green);display:block;}
+.sbox.er{background:var(--red-dim);border:1px solid rgba(192,84,74,.2);color:var(--red);display:block;}
+.sbox.wn{background:rgba(201,168,76,.08);border:1px solid var(--gold-border);color:var(--gold);display:block;}
+.sbox.ld{background:var(--surface2);border:1px solid var(--border);color:var(--muted);display:block;}
+
+/* Modals */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;backdrop-filter:blur(4px);overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:18px;color:var(--text);}
+
+/* Activity log */
+.activity-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;}
+.act-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.act-body{flex:1;}
+.act-note{font-size:12px;color:var(--text2);line-height:1.5;}
+.act-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.act-type{font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;letter-spacing:.4px;text-transform:uppercase;background:var(--surface2);color:var(--muted);}
+
+/* Admin */
+.member-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg2);border-radius:8px;margin-bottom:6px;}
+.member-email{flex:1;font-size:11px;color:var(--text2);font-family:'Instrument Sans',monospace;}
+.role-pill{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;}
+.role-admin{background:var(--gold-dim);color:var(--gold);}
+.role-member{background:var(--team-dim);color:var(--team);}
+
+/* Search */
+.search-row{display:flex;gap:8px;margin-bottom:10px;}
+.search-wrap{position:relative;flex:1;}
+.search-wrap .inp{padding-left:32px;}
+.s-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;right:16px;z-index:3000;padding:11px 16px;border-radius:10px;font-size:12px;font-weight:600;color:var(--bg);box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:280px;display:none;line-height:1.4;}
+
+/* Misc */
+.empty-state{text-align:center;padding:52px 20px;color:var(--muted);}
+.empty-icon{font-size:32px;margin-bottom:12px;opacity:.4;}
+.empty-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.empty-sub{font-size:12px;line-height:1.6;}
+.codebox{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px;font-family:'Instrument Sans',monospace;}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.imgprev{max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--border);object-fit:contain;margin-top:10px;display:none;}
+.overdue-badge{background:var(--red-dim);color:var(--red);font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.4px;}
+.due-today-badge{background:rgba(201,168,76,.15);color:var(--gold);font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.4px;}
+
+/* Preview cards */
+.preview-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.preview-card .pc-info{flex:1;}
+.preview-card .pc-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.preview-card .pc-det{font-size:11px;color:var(--muted);}
+.preview-card .pc-remove{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">CONTACTSAVER</div>
+  <div class="spinner"></div>
+  <div class="load-sub">Connecting…</div>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <span class="auth-mark">ContactSaver CRM</span>
+    <div class="auth-heading">Your contacts,<br/>beautifully kept.</div>
+    <div class="auth-sub">A full-featured sales CRM. Manage leads, track deals, collaborate with your team.</div>
+    <div class="auth-features">
+      <div class="auth-feat"><div class="feat-dot"></div><div class="feat-text">Pipeline & deal tracking with Kanban view</div></div>
+      <div class="auth-feat"><div class="feat-dot"></div><div class="feat-text">Tags, status, priority & follow-up reminders</div></div>
+      <div class="auth-feat"><div class="feat-dot"></div><div class="feat-text">Activity log & notes per contact</div></div>
+      <div class="auth-feat"><div class="feat-dot"></div><div class="feat-text">Analytics dashboard & smart filters</div></div>
+      <div class="auth-feat"><div class="feat-dot"></div><div class="feat-text">AI image scanning, CSV/VCF import & export</div></div>
+    </div>
+    <button class="btn-google" id="btn-google-signin">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="auth-note">By signing in you agree to our terms. Your data is stored securely in Firebase.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="top-brand">CS CRM</div>
+    <div class="top-right">
+      <span class="count-chip" id="count-badge">0</span>
+      <div class="user-chip">
+        <div class="user-av" id="user-av-wrap"></div>
+        <span id="user-name-display" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      </div>
+      <button class="btn-ghost" id="btn-signout">Sign out</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="tab-bar" id="tab-bar">
+      <button class="tab-btn active" data-tab="add">＋ Add</button>
+      <button class="tab-btn" data-tab="bulk">Bulk</button>
+      <button class="tab-btn" data-tab="csv">CSV</button>
+      <button class="tab-btn" data-tab="image">AI Scan</button>
+      <button class="tab-btn" data-tab="list">Contacts</button>
+      <button class="tab-btn" data-tab="pipeline">Pipeline</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+      <button class="tab-btn" data-tab="team" id="team-tab" style="display:none;">Team</button>
+      <button class="tab-btn" data-tab="admin" id="admin-tab" style="display:none;">Admin</button>
+    </div>
+
+    <!-- ADD -->
+    <div id="pane-add" class="pane">
+      <div class="card">
+        <div class="card-title">New Contact</div>
+        <div class="two-col">
+          <div class="fg"><label class="lbl">Full Name *</label><input class="inp" id="add-name" type="text" placeholder="Jane Smith"/><div class="errmsg" id="err-add-name">Required</div></div>
+          <div class="fg"><label class="lbl">Phone *</label><input class="inp" id="add-phone" type="tel" placeholder="+1 555 000 0000"/><div class="errmsg" id="err-add-phone">Required</div></div>
+        </div>
+        <div class="two-col">
+          <div class="fg"><label class="lbl">Email</label><input class="inp" id="add-email" type="email" placeholder="jane@example.com"/></div>
+          <div class="fg"><label class="lbl">Company</label><input class="inp" id="add-company" type="text" placeholder="Acme Inc."/></div>
+        </div>
+        <div class="two-col">
+          <div class="fg"><label class="lbl">Status</label>
+            <select class="inp" id="add-status">
+              <option value="lead">Lead</option>
+              <option value="contacted">Contacted</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal</option>
+              <option value="won">Closed Won</option>
+              <option value="lost">Closed Lost</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl">Priority</label>
+            <select class="inp" id="add-priority">
+              <option value="warm">Warm</option>
+              <option value="hot">Hot</option>
+              <option value="cold">Cold</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="fg"><label class="lbl">Deal Value ($)</label><input class="inp" id="add-value" type="number" placeholder="0"/></div>
+          <div class="fg"><label class="lbl">Follow-up Date</label><input class="inp" id="add-followup" type="date"/></div>
+        </div>
+        <div class="fg"><label class="lbl">Tags (comma separated)</label><input class="inp" id="add-tags" type="text" placeholder="investor, enterprise, warm-intro"/></div>
+        <div class="fg"><label class="lbl">Notes</label><textarea class="inp" id="add-notes" rows="2" placeholder="Any notes…" style="min-height:60px;"></textarea></div>
+        <div class="row">
+          <button class="btn btn-p" id="btn-add-save">Save Contact</button>
+          <div id="add-sync-status" style="font-size:11px;color:var(--muted);align-self:center;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BULK -->
+    <div id="pane-bulk" class="pane hidden">
+      <div class="card">
+        <div class="card-title">Bulk Paste</div>
+        <p class="hint">Paste names and numbers — one per line. We'll parse them automatically.</p>
+        <div class="codebox">John Doe +1 555 000 1234 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a4cecbcccae4c1dcc5c9d4c8c18ac7cbc9">[email&#160;protected]</a><br/>Jane Smith, 0712345678<br/>Bob Jones | 020 7946 0958 | <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90f2fff2d0f5e8f1fde0fcf5bef3fffd">[email&#160;protected]</a></div>
+        <textarea class="inp" id="bulk-text" placeholder="Paste contacts here…"></textarea>
+        <div class="row">
+          <button class="btn btn-p" id="btn-bulk-parse">Parse & Preview</button>
+        </div>
+      </div>
+      <div class="card" id="bulk-preview-card" style="display:none;">
+        <div class="card-title">Preview — <span id="bulk-count">0</span> contacts</div>
+        <div id="bulk-preview-list"></div>
+        <div class="row">
+          <button class="btn btn-p" id="btn-bulk-import">Import All</button>
+          <button class="btn btn-s" id="btn-bulk-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV -->
+    <div id="pane-csv" class="pane hidden">
+      <div class="card">
+        <div class="card-title">CSV Upload</div>
+        <p class="hint">Upload a CSV with columns: <strong style="color:var(--text2);">name, phone, email, company, status, tags</strong></p>
+        <div class="dz" id="csv-drop">
+          <div class="dz-icon">📂</div>
+          <div class="dz-title">Drop your CSV here</div>
+          <div class="dz-sub">or choose a file below</div>
+        </div>
+        <div class="uprow"><button class="btn btn-p" id="btn-csv-pick">Choose File</button></div>
+        <input type="file" id="csv-file" accept=".csv,.txt" style="display:none"/>
+        <div class="codebox" style="margin-top:14px;">name,phone,email,company<br/>John Doe,+15550001234,<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1e747176705e7b667f736e727b307d7173">[email&#160;protected]</a>,Acme</div>
+      </div>
+      <div class="card" id="csv-preview-card" style="display:none;">
+        <div class="card-title">Preview — <span id="csv-count">0</span> contacts</div>
+        <div id="csv-preview-list"></div>
+        <div class="row">
+          <button class="btn btn-p" id="btn-csv-import">Import All</button>
+          <button class="btn btn-s" id="btn-csv-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI IMAGE -->
+    <div id="pane-image" class="pane hidden">
+      <div class="keyrow">
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;font-weight:600;">GROQ KEY</span>
+        <input class="keyinp" id="api-key" type="password" placeholder="gsk_…"/>
+        <button class="btn btn-s btn-xs" id="btn-key-toggle">Show</button>
+        <span id="key-ok" style="font-size:10px;color:var(--green);display:none;">✓ Set</span>
+      </div>
+      <div class="card">
+        <div class="card-title">Scan Image</div>
+        <p class="hint">Business cards, screenshots, WhatsApp exports — anything with contact info.</p>
+        <div class="dz" id="img-drop">
+          <div id="img-dz-inner">
+            <div class="dz-icon">🖼</div>
+            <div class="dz-title">Drop an image here</div>
+            <div class="dz-sub">or use the buttons below</div>
+          </div>
+        </div>
+        <div class="uprow">
+          <button class="btn btn-p" id="btn-img-gallery">Gallery / Files</button>
+          <button class="btn btn-s" id="btn-img-camera">Take Photo</button>
+        </div>
+        <input type="file" id="img-gallery" accept="image/*" style="display:none"/>
+        <input type="file" id="img-camera" accept="image/*" capture="environment" style="display:none"/>
+        <div class="sbox" id="img-status"></div>
+        <img class="imgprev" id="img-preview" alt="preview"/>
+      </div>
+      <div class="card" id="img-preview-card" style="display:none;">
+        <div class="card-title">Preview — <span id="img-count">0</span> contacts found</div>
+        <div id="img-preview-list"></div>
+        <div class="row">
+          <button class="btn btn-p" id="btn-img-import">Import All</button>
+          <button class="btn btn-s" id="btn-img-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS LIST -->
+    <div id="pane-list" class="pane hidden">
+      <div class="statsrow">
+        <div class="statbox"><div class="statnum" id="stat-total">0</div><div class="statlbl">Personal</div></div>
+        <div class="statbox"><div class="statnum" id="stat-team-count">0</div><div class="statlbl">Team</div></div>
+        <div class="statbox"><div class="statnum" id="stat-dups">0</div><div class="statlbl">Duplicates</div></div>
+        <div class="statbox"><div class="statnum" id="stat-overdue">0</div><div class="statlbl">Overdue</div></div>
+        <div class="statbox"><div class="statnum" id="stat-showing">0</div><div class="statlbl">Showing</div></div>
+      </div>
+      <div class="search-row">
+        <div class="search-wrap">
+          <span class="s-icon">🔍</span>
+          <input class="inp" id="search-inp" type="search" placeholder="Search contacts…"/>
+        </div>
+        <button class="btn btn-s btn-xs" id="btn-filter-toggle" style="padding:9px 12px;">⚙ Filter</button>
+        <button class="btn btn-s btn-xs" id="btn-search-clear" style="padding:9px 12px;">✕</button>
+      </div>
+      <!-- Filter Bar -->
+      <div class="filter-bar" id="filter-bar">
+        <div id="active-filters" class="active-filters" style="display:none;"></div>
+        <div class="lbl" style="margin-bottom:8px;">Status</div>
+        <div class="filter-row" id="filter-status-row">
+          <button class="filter-chip" data-filter="status" data-val="lead">Lead</button>
+          <button class="filter-chip" data-filter="status" data-val="contacted">Contacted</button>
+          <button class="filter-chip" data-filter="status" data-val="qualified">Qualified</button>
+          <button class="filter-chip" data-filter="status" data-val="proposal">Proposal</button>
+          <button class="filter-chip" data-filter="status" data-val="won">Won</button>
+          <button class="filter-chip" data-filter="status" data-val="lost">Lost</button>
+        </div>
+        <div class="lbl" style="margin-bottom:8px;margin-top:10px;">Priority</div>
+        <div class="filter-row">
+          <button class="filter-chip" data-filter="priority" data-val="hot">🔥 Hot</button>
+          <button class="filter-chip" data-filter="priority" data-val="warm">Warm</button>
+          <button class="filter-chip" data-filter="priority" data-val="cold">❄ Cold</button>
+        </div>
+        <div class="lbl" style="margin-bottom:8px;margin-top:10px;">Follow-up</div>
+        <div class="filter-row">
+          <button class="filter-chip" data-filter="followup" data-val="overdue">🔴 Overdue</button>
+          <button class="filter-chip" data-filter="followup" data-val="today">📅 Due Today</button>
+          <button class="filter-chip" data-filter="followup" data-val="week">This Week</button>
+        </div>
+        <div class="lbl" style="margin-bottom:8px;margin-top:10px;">Type</div>
+        <div class="filter-row">
+          <button class="filter-chip" data-filter="type" data-val="personal">Personal</button>
+          <button class="filter-chip" data-filter="type" data-val="team">Team</button>
+        </div>
+        <div class="lbl" style="margin-bottom:8px;margin-top:10px;">Company</div>
+        <div class="filter-row" id="filter-company-row"></div>
+        <div class="lbl" style="margin-bottom:8px;margin-top:10px;">Tags</div>
+        <div class="filter-row" id="filter-tags-row"></div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn btn-s btn-xs" id="btn-filter-clear">Clear All Filters</button>
+        </div>
+      </div>
+      <!-- Export row -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn btn-s btn-xs" id="btn-dl-vcf" style="display:none;">⬇ Export VCF</button>
+        <button class="btn btn-s btn-xs" id="btn-dl-csv" style="display:none;">⬇ Export CSV</button>
+      </div>
+      <div id="contacts-grid" class="grid"></div>
+      <div id="empty-contacts" class="empty-state" style="display:none;">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No contacts yet</div>
+        <div class="empty-sub">Use the tabs above to add your first contact</div>
+      </div>
+      <div id="no-match" class="empty-state" style="display:none;">
+        <div class="empty-icon">🔎</div>
+        <div class="empty-title">No results</div>
+        <div class="empty-sub">Try adjusting your search or filters</div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div id="pane-pipeline" class="pane hidden">
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div class="card-title" style="margin-bottom:4px;">Deal Pipeline</div>
+            <div style="font-size:12px;color:var(--muted);">Total pipeline: <strong id="pipeline-total" style="color:var(--green);">$0</strong></div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-s btn-xs" id="btn-pipeline-refresh">↻ Refresh</button>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline" id="pipeline-board"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="pane-analytics" class="pane hidden">
+      <div class="analytics-grid">
+        <div class="a-card">
+          <div class="a-title">Total Contacts</div>
+          <div class="statnum" id="an-total">0</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">across all sources</div>
+        </div>
+        <div class="a-card">
+          <div class="a-title">Pipeline Value</div>
+          <div class="statnum" id="an-pipeline">$0</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">open deals</div>
+        </div>
+        <div class="a-card">
+          <div class="a-title">Won Revenue</div>
+          <div class="statnum" id="an-won">$0</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">closed won</div>
+        </div>
+        <div class="a-card">
+          <div class="a-title">Win Rate</div>
+          <div class="statnum" id="an-winrate">0%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">won vs lost</div>
+        </div>
+        <div class="a-card">
+          <div class="a-title">Hot Leads</div>
+          <div class="statnum" id="an-hot">0</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">high priority</div>
+        </div>
+        <div class="a-card">
+          <div class="a-title">Overdue Follow-ups</div>
+          <div class="statnum" id="an-overdue" style="color:var(--red);">0</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">need attention</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sales Funnel</div>
+        <div id="funnel-chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Contacts by Company</div>
+        <div id="company-chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tag Distribution</div>
+        <div id="tags-chart"></div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div id="pane-team" class="pane hidden">
+      <div class="card">
+        <div class="card-title">Team Shared Pool</div>
+        <div class="row">
+          <button class="btn btn-p" id="btn-add-team-contact">＋ Add Team Contact</button>
+          <button class="btn btn-s btn-xs" id="btn-team-dl-vcf">⬇ VCF</button>
+          <button class="btn btn-s btn-xs" id="btn-team-dl-csv">⬇ CSV</button>
+        </div>
+      </div>
+      <div id="team-grid" class="grid"></div>
+      <div id="empty-team" class="empty-state">
+        <div class="empty-icon">👥</div>
+        <div class="empty-title">No team contacts yet</div>
+        <div class="empty-sub">Add contacts to share with your team</div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="pane-admin" class="pane hidden">
+      <div class="card">
+        <div class="card-title">Add Team Member</div>
+        <div class="fg" style="display:flex;gap:8px;">
+          <input class="inp" id="admin-email-inp" type="email" placeholder="teammate@gmail.com" style="flex:1;"/>
+          <select class="inp" id="admin-role-inp" style="width:100px;">
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="row"><button class="btn btn-p" id="btn-add-member">Add Member</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Current Members</div>
+        <div id="members-list"><div style="font-size:12px;color:var(--muted);">Loading…</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Export All Team Contacts</div>
+        <div class="row">
+          <button class="btn btn-s" id="btn-export-team-vcf">⬇ VCF</button>
+          <button class="btn btn-s" id="btn-export-team-csv">⬇ CSV</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="edit-modal">
+  <div class="modal">
+    <div class="mtitle">Edit Contact</div>
+    <input type="hidden" id="edit-id"/>
+    <input type="hidden" id="edit-type"/>
+    <div class="two-col">
+      <div class="fg"><label class="lbl">Name *</label><input class="inp" id="edit-name" type="text"/><div class="errmsg" id="err-edit-name">Required</div></div>
+      <div class="fg"><label class="lbl">Phone *</label><input class="inp" id="edit-phone" type="tel"/><div class="errmsg" id="err-edit-phone">Required</div></div>
+    </div>
+    <div class="two-col">
+      <div class="fg"><label class="lbl">Email</label><input class="inp" id="edit-email" type="email"/></div>
+      <div class="fg"><label class="lbl">Company</label><input class="inp" id="edit-company" type="text"/></div>
+    </div>
+    <div class="two-col">
+      <div class="fg"><label class="lbl">Status</label>
+        <select class="inp" id="edit-status">
+          <option value="lead">Lead</option>
+          <option value="contacted">Contacted</option>
+          <option value="qualified">Qualified</option>
+          <option value="proposal">Proposal</option>
+          <option value="won">Closed Won</option>
+          <option value="lost">Closed Lost</option>
+        </select>
+      </div>
+      <div class="fg"><label class="lbl">Priority</label>
+        <select class="inp" id="edit-priority">
+          <option value="hot">Hot</option>
+          <option value="warm">Warm</option>
+          <option value="cold">Cold</option>
+        </select>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="fg"><label class="lbl">Deal Value ($)</label><input class="inp" id="edit-value" type="number"/></div>
+      <div class="fg"><label class="lbl">Follow-up Date</label><input class="inp" id="edit-followup" type="date"/></div>
+    </div>
+    <div class="fg"><label class="lbl">Tags (comma separated)</label><input class="inp" id="edit-tags" type="text"/></div>
+    <div class="fg"><label class="lbl">Notes</label><textarea class="inp" id="edit-notes" rows="2" style="min-height:60px;"></textarea></div>
+    <!-- Activity log -->
+    <div class="divider">Activity Log</div>
+    <div class="fg">
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <select class="inp" id="act-type-sel" style="width:110px;font-size:11px;padding:7px 8px;">
+          <option value="note">📝 Note</option>
+          <option value="call">📞 Call</option>
+          <option value="meeting">🤝 Meeting</option>
+          <option value="email">✉ Email</option>
+          <option value="whatsapp">💬 WhatsApp</option>
+        </select>
+        <input class="inp" id="act-note-inp" type="text" placeholder="Log an activity…" style="flex:1;font-size:12px;"/>
+        <button class="btn btn-s btn-xs" id="btn-act-add" style="padding:7px 10px;">Add</button>
+      </div>
+      <div id="activity-list" style="max-height:160px;overflow-y:auto;"></div>
+    </div>
+    <div class="row">
+      <button class="btn btn-p" id="btn-edit-save">Save</button>
+      <button class="btn btn-s" id="btn-edit-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="overlay" id="del-modal">
+  <div class="modal">
+    <div class="mtitle">Delete Contact</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">Delete <strong id="del-name" style="color:var(--text);"></strong>? This cannot be undone.</p>
+    <div class="row">
+      <button class="btn btn-d" id="btn-del-confirm">Delete</button>
+      <button class="btn btn-s" id="btn-del-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TEAM CONTACT MODAL -->
+<div class="overlay" id="team-add-modal">
+  <div class="modal">
+    <div class="mtitle">Add Team Contact</div>
+    <div class="fg"><label class="lbl">Name *</label><input class="inp" id="tc-name" type="text"/><div class="errmsg" id="err-tc-name">Required</div></div>
+    <div class="fg"><label class="lbl">Phone *</label><input class="inp" id="tc-phone" type="tel"/><div class="errmsg" id="err-tc-phone">Required</div></div>
+    <div class="fg"><label class="lbl">Email</label><input class="inp" id="tc-email" type="email"/></div>
+    <div class="fg"><label class="lbl">Company</label><input class="inp" id="tc-company" type="text"/></div>
+    <div class="row">
+      <button class="btn btn-team" id="btn-tc-save">Add to Team</button>
+      <button class="btn btn-s" id="btn-tc-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SELECTION BARS -->
+<div class="sel-bar" id="sel-bar">
+  <span class="sel-count" id="sel-count">0 selected</span>
+  <button class="btn btn-s btn-xs" id="sel-cancel">Cancel</button>
+  <button class="btn btn-s btn-xs" id="sel-all">All</button>
+  <button class="btn btn-p btn-xs" id="sel-vcf">⬇ VCF</button>
+  <button class="btn btn-green btn-xs" id="sel-csv">⬇ CSV</button>
+  <button class="btn btn-d btn-xs" id="sel-delete">🗑</button>
+  <button class="btn btn-team btn-xs" id="sel-team" style="display:none;">→ Team</button>
+</div>
+<div class="sel-bar" id="team-sel-bar">
+  <span class="sel-count" id="team-sel-count">0 selected</span>
+  <button class="btn btn-s btn-xs" id="team-sel-cancel">Cancel</button>
+  <button class="btn btn-s btn-xs" id="team-sel-all">All</button>
+  <button class="btn btn-p btn-xs" id="team-sel-vcf">⬇ VCF</button>
+  <button class="btn btn-green btn-xs" id="team-sel-csv">⬇ CSV</button>
+  <button class="btn btn-d btn-xs" id="team-sel-delete" style="display:none;">🗑</button>
+  <button class="btn btn-s btn-xs" id="team-sel-mine">→ Mine</button>
+</div>
+
+<div id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7wB8uvfOjACv4tFqqps7_-LWXSvxTJZU",
+  authDomain: "cs-crm-e9f2e.firebaseapp.com",
+  projectId: "cs-crm-e9f2e",
+  storageBucket: "cs-crm-e9f2e.firebasestorage.app",
+  messagingSenderId: "627555954294",
+  appId: "1:627555954294:web:caf128c2c699b8e3587957"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const ADMIN_EMAIL = 'konami.pes.0813@gmail.com';
+const STAGES = ['lead','contacted','qualified','proposal','won','lost'];
+const STAGE_LABELS = {lead:'Lead',contacted:'Contacted',qualified:'Qualified',proposal:'Proposal',won:'Won',lost:'Lost'};
+const STAGE_COLORS = {lead:'var(--gold)',contacted:'var(--green)',qualified:'var(--team)',proposal:'var(--orange)',won:'#3d9e6b',lost:'var(--red)'};
+
+let currentUser=null, isTeamMember=false, isAdmin=false;
+let myContacts=[], teamContacts=[];
+let deleteTargetId=null, deleteTargetType=null;
+let editCurrentId=null;
+let unsubMyContacts=null, unsubTeam=null;
+let activeFilters={status:null,priority:null,followup:null,type:null,company:null,tag:null};
+let bulkParsed=[], csvParsed=[], imgParsed=[];
+let selectedIds=new Set(), teamSelectedIds=new Set();
+let selectionMode=false, teamSelectionMode=false;
+let longPressTimer=null, teamLongPressTimer=null;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+const el  = id => document.getElementById(id);
+const gv  = id => el(id)?el(id).value.trim():'';
+const sv  = (id,v) => { if(el(id)) el(id).value=v||''; };
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function showErr(id){ const e=el('err-'+id); if(e) e.style.display='block'; const i=el(id); if(i) i.classList.add('err'); }
+function clearErr(id){ const e=el('err-'+id); if(e) e.style.display='none'; const i=el(id); if(i) i.classList.remove('err'); }
+
+let toastTimer;
+function toast(msg,type='success'){
+  const t=el('toast'); if(!t) return;
+  t.textContent=msg;
+  t.style.background=type==='error'?'var(--red)':type==='warn'?'var(--gold)':'var(--green)';
+  t.style.display='block';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.style.display='none',3500);
+}
+
+function getInitials(name){
+  const parts=(name||'').trim().split(' ');
+  return parts.length>1?(parts[0][0]+parts[parts.length-1][0]).toUpperCase():((name||'?')[0]||'?').toUpperCase();
+}
+
+function parseTags(str){ return (str||'').split(',').map(t=>t.trim()).filter(Boolean); }
+
+function formatDate(str){
+  if(!str) return '';
+  const d=new Date(str+'T00:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function getFollowupStatus(dateStr){
+  if(!dateStr) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(dateStr+'T00:00:00');
+  if(d<today) return 'overdue';
+  if(d.getTime()===today.getTime()) return 'today';
+  const week=new Date(today); week.setDate(week.getDate()+7);
+  if(d<=week) return 'week';
+  return null;
+}
+
+function statusBadge(s){
+  const map={lead:'s-lead',contacted:'s-contacted',qualified:'s-qualified',proposal:'s-proposal',won:'s-won',lost:'s-lost'};
+  const labels={lead:'Lead',contacted:'Contacted',qualified:'Qualified',proposal:'Proposal',won:'Won ✓',lost:'Lost'};
+  return `<span class="status-badge ${map[s]||'s-lead'}">${labels[s]||s}</span>`;
+}
+
+function prioDot(p){
+  return `<span class="prio-dot prio-${p||'warm'}" title="${p||'warm'}"></span>`;
+}
+
+function formatMoney(v){ return v?(Number(v)>=1000?'$'+(Number(v)/1000).toFixed(1)+'k':'$'+Number(v)):''; }
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+const PANES=['add','bulk','csv','image','list','pipeline','analytics','team','admin'];
+function switchTab(id){
+  PANES.forEach(p=>{
+    const pane=el('pane-'+p), btn=document.querySelector('[data-tab="'+p+'"]');
+    if(pane) pane.classList.toggle('hidden',p!==id);
+    if(btn)  btn.classList.toggle('active',p===id);
+  });
+  if(id==='list')     renderList();
+  if(id==='team')     renderTeam();
+  if(id==='admin')    renderMembers();
+  if(id==='pipeline') renderPipeline();
+  if(id==='analytics') renderAnalytics();
+}
+el('tab-bar').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-tab]');
+  if(btn&&btn.dataset.tab) switchTab(btn.dataset.tab);
+});
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+el('btn-google-signin').addEventListener('click',async()=>{
+  try{ await signInWithPopup(auth,new GoogleAuthProvider()); }
+  catch(e){ toast('Sign-in failed: '+e.message,'error'); }
+});
+el('btn-signout').addEventListener('click',async()=>{
+  if(unsubMyContacts){unsubMyContacts();unsubMyContacts=null;}
+  if(unsubTeam){unsubTeam();unsubTeam=null;}
+  await signOut(auth);
+});
+
+setTimeout(()=>{
+  if(el('loading').style.display!=='none'){
+    el('loading').style.display='none';
+    el('auth-screen').style.display='flex';
+  }
+},6000);
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    currentUser=user;
+    el('loading').style.display='none';
+    el('auth-screen').style.display='none';
+    el('app-screen').style.display='block';
+    setupUserUI(user);
+    try{
+      const ref=doc(db,'users',user.uid);
+      const snap=await getDoc(ref);
+      if(!snap.exists()) await setDoc(ref,{email:user.email,name:user.displayName||'',createdAt:serverTimestamp()});
+    }catch(e){}
+    subscribeMyContacts(user);
+    checkTeamAccess(user);
+  } else {
+    currentUser=null; isTeamMember=false; isAdmin=false;
+    if(unsubMyContacts){unsubMyContacts();unsubMyContacts=null;}
+    if(unsubTeam){unsubTeam();unsubTeam=null;}
+    el('loading').style.display='none';
+    el('app-screen').style.display='none';
+    el('auth-screen').style.display='flex';
+  }
+});
+
+function setupUserUI(user){
+  const name=user.displayName||user.email||'User';
+  el('user-name-display').textContent=name.split(' ')[0];
+  const av=el('user-av-wrap');
+  if(user.photoURL) av.innerHTML=`<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:99px;">`;
+  else av.textContent=getInitials(name);
+}
+
+function checkTeamAccess(user){
+  const email=(user.email||'').toLowerCase().trim();
+  if(email===ADMIN_EMAIL.toLowerCase()){
+    isTeamMember=true; isAdmin=true;
+    el('team-tab').style.display='';
+    el('admin-tab').style.display='';
+    subscribeTeam(); return;
+  }
+  getDoc(doc(db,'team','members')).then(snap=>{
+    if(!snap.exists()) return;
+    const found=(snap.data().list||[]).find(m=>(m.email||'').toLowerCase().trim()===email);
+    if(!found) return;
+    isTeamMember=true;
+    isAdmin=(found.role||'').toLowerCase().trim()==='admin';
+    el('team-tab').style.display='';
+    if(isAdmin) el('admin-tab').style.display='';
+    el('sel-team').style.display='inline-flex';
+    subscribeTeam();
+  }).catch(e=>console.warn('team check',e));
+}
+
+// ── Subscriptions ─────────────────────────────────────────────────────────────
+function subscribeMyContacts(user){
+  const q=query(collection(db,'users',user.uid,'contacts'),orderBy('createdAt','desc'));
+  unsubMyContacts=onSnapshot(q,snap=>{
+    myContacts=snap.docs.map(d=>({id:d.id,...d.data(),_type:'personal'}));
+    updateHeader(); renderList();
+    if(!el('pane-pipeline').classList.contains('hidden')) renderPipeline();
+    if(!el('pane-analytics').classList.contains('hidden')) renderAnalytics();
+  },e=>console.error(e));
+}
+
+function subscribeTeam(){
+  const q=query(collection(db,'team','contacts','items'),orderBy('createdAt','desc'));
+  unsubTeam=onSnapshot(q,snap=>{
+    teamContacts=snap.docs.map(d=>({id:d.id,...d.data(),_type:'team'}));
+    updateHeader(); renderList();
+    if(!el('pane-team').classList.contains('hidden')) renderTeam();
+  },e=>console.error(e));
+}
+
+function updateHeader(){
+  const total=myContacts.length+(isTeamMember?teamContacts.length:0);
+  el('count-badge').textContent=total+' contact'+(total!==1?'s':'');
+  el('btn-dl-vcf').style.display=myContacts.length?'inline-flex':'none';
+  el('btn-dl-csv').style.display=myContacts.length?'inline-flex':'none';
+}
+
+// ── Add One ───────────────────────────────────────────────────────────────────
+el('btn-add-save').addEventListener('click',addOne);
+async function addOne(){
+  const name=gv('add-name'),phone=gv('add-phone'),email=gv('add-email');
+  const company=gv('add-company'),notes=gv('add-notes'),tags=parseTags(gv('add-tags'));
+  const status=gv('add-status')||'lead',priority=gv('add-priority')||'warm';
+  const value=gv('add-value')||'',followup=gv('add-followup')||'';
+  let ok=true;
+  if(!name){showErr('add-name');ok=false;}
+  if(!phone){showErr('add-phone');ok=false;}
+  if(!ok) return;
+  if(myContacts.some(c=>c.phone===phone)){toast('Phone already exists','warn');return;}
+  el('add-sync-status').textContent='Saving…';
+  try{
+    await addDoc(collection(db,'users',currentUser.uid,'contacts'),{
+      name,phone,email,company,notes,tags,status,priority,value,followup,
+      activities:[],createdAt:serverTimestamp()
+    });
+    ['add-name','add-phone','add-email','add-company','add-notes','add-tags','add-value','add-followup'].forEach(id=>sv(id,''));
+    el('add-sync-status').textContent='';
+    toast('✓ '+name+' saved');
+  }catch(e){el('add-sync-status').textContent='';toast('Failed: '+e.message,'error');}
+}
+
+// ── Bulk ─────────────────────────────────────────────────────────────────────
+el('btn-bulk-parse').addEventListener('click',()=>{
+  bulkParsed=parseBulkText(el('bulk-text').value);
+  if(!bulkParsed.length){toast('Nothing parsed','error');return;}
+  showPreviewList('bulk-preview-list',bulkParsed,'bulk');
+  el('bulk-count').textContent=bulkParsed.length;
+  el('bulk-preview-card').style.display='block';
+});
+el('btn-bulk-import').addEventListener('click',()=>importParsed(bulkParsed,'bulk'));
+el('btn-bulk-cancel').addEventListener('click',()=>{bulkParsed=[];el('bulk-preview-card').style.display='none';sv('bulk-text','');});
+
+function parseBulkText(text){
+  const lines=text.split('\n'),res=[];
+  const pRe=/(\+?[\d\s\-(). ]{7,})/,eRe=/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/;
+  for(const line of lines){
+    const l=line.trim(); if(!l) continue;
+    const em=l.match(eRe),email=em?em[1]:'';
+    const s=l.replace(eRe,'').trim();
+    const pm=s.match(pRe),phone=pm?pm[1].trim():'';
+    const name=s.replace(pRe,'').replace(/[,|;]+/g,' ').replace(/\s+/g,' ').trim();
+    if(name||phone) res.push({name:name||'Unknown',phone,email,company:'',status:'lead',priority:'warm',tags:[],value:'',followup:'',notes:'',activities:[]});
+  }
+  return res;
+}
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+el('btn-csv-pick').addEventListener('click',()=>el('csv-file').click());
+el('csv-file').addEventListener('change',function(){handleCSVFile(this.files[0]);this.value='';});
+el('btn-csv-import').addEventListener('click',()=>importParsed(csvParsed,'csv'));
+el('btn-csv-cancel').addEventListener('click',()=>{csvParsed=[];el('csv-preview-card').style.display='none';});
+const csvDrop=el('csv-drop');
+csvDrop.addEventListener('dragover',e=>{e.preventDefault();csvDrop.style.borderColor='var(--gold)';});
+csvDrop.addEventListener('dragleave',()=>csvDrop.style.borderColor='var(--border2)');
+csvDrop.addEventListener('drop',e=>{e.preventDefault();csvDrop.style.borderColor='var(--border2)';handleCSVFile(e.dataTransfer.files[0]);});
+
+function parseCSV(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2) return[];
+  const h=lines[0].toLowerCase().split(',').map(x=>x.replace(/["']/g,'').trim());
+  const ni=h.findIndex(x=>x.includes('name'));
+  const pi=h.findIndex(x=>x.includes('phone')||x.includes('mobile')||x.includes('tel'));
+  const ei=h.findIndex(x=>x.includes('email'));
+  const ci=h.findIndex(x=>x.includes('company'));
+  const si=h.findIndex(x=>x.includes('status'));
+  const ti=h.findIndex(x=>x.includes('tag'));
+  return lines.slice(1).map(line=>{
+    const c=line.split(',').map(x=>x.replace(/["']/g,'').trim());
+    return{
+      name:ni>=0?c[ni]||'':c[0]||'',phone:pi>=0?c[pi]||'':c[1]||'',
+      email:ei>=0?c[ei]||'':c[2]||'',company:ci>=0?c[ci]||'':'',
+      status:si>=0?c[si]||'lead':'lead',tags:ti>=0?parseTags(c[ti]):[],
+      priority:'warm',value:'',followup:'',notes:'',activities:[]
+    };
+  }).filter(c=>c.name||c.phone);
+}
+
+async function handleCSVFile(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    csvParsed=parseCSV(e.target.result);
+    if(!csvParsed.length){toast('No contacts found','error');return;}
+    showPreviewList('csv-preview-list',csvParsed,'csv');
+    el('csv-count').textContent=csvParsed.length;
+    el('csv-preview-card').style.display='block';
+  };
+  r.readAsText(file);
+}
+
+// ── AI Image ──────────────────────────────────────────────────────────────────
+function setStatus(type,msg){const s=el('img-status');s.className='sbox '+type;s.textContent=msg;}
+const fileToB64=file=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+
+async function extractFromImage(b64,mime,key){
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({
+      model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:1000,
+      messages:[{role:'user',content:[
+        {type:'image_url',image_url:{url:'data:'+mime+';base64,'+b64}},
+        {type:'text',text:'Extract all contacts from this image. Return ONLY a valid JSON array, no markdown. Each object: {"name":"...","phone":"...","email":"...","company":"..."}. Use empty string if not found.'}
+      ]}]
+    })
+  });
+  if(!resp.ok){const e=await resp.json();throw new Error(e.error?e.error.message:'API error');}
+  const data=await resp.json();
+  const text=data.choices?.[0]?.message?.content||'[]';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+async function processImage(file){
+  const key=gv('api-key');
+  if(!key){setStatus('er','Enter your Groq API key first.');return;}
+  if(!file.type.startsWith('image/')){setStatus('er','Please upload an image file.');return;}
+  el('img-preview').src=URL.createObjectURL(file);
+  el('img-preview').style.display='block';
+  el('img-preview-card').style.display='none';
+  el('img-dz-inner').innerHTML='<div style="font-size:22px;margin-bottom:8px;">⚙️</div><div style="font-weight:600;color:var(--gold);">Reading image…</div>';
+  setStatus('ld','Scanning with Groq AI…');
+  try{
+    const b64=await fileToB64(file);
+    const list=await extractFromImage(b64,file.type,key);
+    el('img-dz-inner').innerHTML='<div class="dz-icon">🖼</div><div class="dz-title">Drop another image</div><div class="dz-sub">or use buttons below</div>';
+    if(!list.length){setStatus('wn','No contacts found in this image.');return;}
+    imgParsed=list.map(c=>({name:c.name||'',phone:c.phone||'',email:c.email||'',company:c.company||'',status:'lead',priority:'warm',tags:[],value:'',followup:'',notes:'',activities:[]}));
+    showPreviewList('img-preview-list',imgParsed,'img');
+    el('img-count').textContent=imgParsed.length;
+    el('img-preview-card').style.display='block';
+    setStatus('ok',`✓ Found ${imgParsed.length} contact${imgParsed.length!==1?'s':''}. Review and import below.`);
+  }catch(e){
+    el('img-dz-inner').innerHTML='<div class="dz-icon">🖼</div><div class="dz-title">Drop image here</div><div class="dz-sub">or use buttons below</div>';
+    setStatus('er',e.message||'Failed — check your Groq key.');
+  }
+}
+
+el('btn-key-toggle').addEventListener('click',function(){const inp=el('api-key'),show=inp.type==='text';inp.type=show?'password':'text';this.textContent=show?'Show':'Hide';});
+el('api-key').addEventListener('input',function(){el('key-ok').style.display=this.value.trim()?'inline':'none';});
+el('btn-img-gallery').addEventListener('click',()=>el('img-gallery').click());
+el('btn-img-camera').addEventListener('click',()=>el('img-camera').click());
+el('img-gallery').addEventListener('change',function(){if(this.files[0])processImage(this.files[0]);this.value='';});
+el('img-camera').addEventListener('change',function(){if(this.files[0])processImage(this.files[0]);this.value='';});
+el('btn-img-import').addEventListener('click',()=>importParsed(imgParsed,'img'));
+el('btn-img-cancel').addEventListener('click',()=>{imgParsed=[];el('img-preview-card').style.display='none';});
+const imgDrop=el('img-drop');
+imgDrop.addEventListener('dragover',e=>{e.preventDefault();imgDrop.style.borderColor='var(--gold)';});
+imgDrop.addEventListener('dragleave',()=>imgDrop.style.borderColor='var(--border2)');
+imgDrop.addEventListener('drop',e=>{e.preventDefault();imgDrop.style.borderColor='var(--border2)';if(e.dataTransfer.files[0])processImage(e.dataTransfer.files[0]);});
+
+// ── Preview List (shared) ─────────────────────────────────────────────────────
+function showPreviewList(containerId,parsed,prefix){
+  const container=el(containerId);
+  container.innerHTML=parsed.map((c,i)=>`
+    <div class="preview-card" id="${prefix}-prev-${i}">
+      <div class="pc-info">
+        <div class="pc-name">${esc(c.name||'Unknown')}</div>
+        <div class="pc-det">${c.phone||'—'} ${c.email?'· '+c.email:''} ${c.company?'· '+c.company:''}</div>
+      </div>
+      <button class="pc-remove" data-prefix="${prefix}" data-idx="${i}" title="Remove">✕</button>
+    </div>`).join('');
+  container.addEventListener('click',e=>{
+    const btn=e.target.closest('.pc-remove'); if(!btn) return;
+    const idx=parseInt(btn.dataset.idx), pfx=btn.dataset.prefix;
+    if(pfx==='bulk') bulkParsed.splice(idx,1);
+    else if(pfx==='csv') csvParsed.splice(idx,1);
+    else if(pfx==='img') imgParsed.splice(idx,1);
+    btn.closest('.preview-card').remove();
+    const arr=pfx==='bulk'?bulkParsed:pfx==='csv'?csvParsed:imgParsed;
+    el(pfx==='bulk'?'bulk-count':pfx==='csv'?'csv-count':'img-count').textContent=arr.length;
+  },{once:false});
+}
+
+// ── Import (shared) ───────────────────────────────────────────────────────────
+async function importParsed(parsed,prefix){
+  if(!parsed.length){toast('Nothing to import','warn');return;}
+  let added=0,skipped=0;
+  const existingPhones=myContacts.map(c=>c.phone);
+  for(const c of parsed){
+    if(c.phone&&existingPhones.includes(c.phone)){skipped++;continue;}
+    await addDoc(collection(db,'users',currentUser.uid,'contacts'),{
+      name:c.name||'',phone:c.phone||'',email:c.email||'',company:c.company||'',
+      notes:c.notes||'',tags:c.tags||[],status:c.status||'lead',priority:c.priority||'warm',
+      value:c.value||'',followup:c.followup||'',activities:[],createdAt:serverTimestamp()
+    });
+    added++;
+  }
+  toast(`✓ ${added} imported${skipped?`, ${skipped} skipped`:''}`,skipped?'warn':'success');
+  if(prefix==='bulk'){bulkParsed=[];el('bulk-preview-card').style.display='none';sv('bulk-text','');}
+  if(prefix==='csv'){csvParsed=[];el('csv-preview-card').style.display='none';}
+  if(prefix==='img'){imgParsed=[];el('img-preview-card').style.display='none';}
+}
+
+// ── Export (VCF + CSV) ────────────────────────────────────────────────────────
+function toVCF(c){
+  return['BEGIN:VCARD','VERSION:3.0','FN:'+(c.name||''),'N:'+(c.name||'')+';;;;',
+    c.phone?'TEL;TYPE=CELL:'+c.phone:'',c.email?'EMAIL:'+c.email:'',
+    c.company?'ORG:'+c.company:'',c.notes?'NOTE:'+c.notes:'','END:VCARD'].filter(Boolean).join('\n');
+}
+
+function toCSV(contacts){
+  const header='Name,Phone,Email,Company,Status,Priority,Deal Value,Follow-up Date,Tags,Notes';
+  const rows=contacts.map(c=>[
+    c.name||'',c.phone||'',c.email||'',c.company||'',
+    c.status||'lead',c.priority||'warm',c.value||'',c.followup||'',
+    (c.tags||[]).join(';'),c.notes||''
+  ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  return [header,...rows].join('\n');
+}
+
+function downloadFile(content,filename,mime){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:mime}));
+  a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function dlVCF(contacts,name='contacts'){
+  if(!contacts.length) return;
+  downloadFile(contacts.map(toVCF).join('\n'),
+    contacts.length===1?(contacts[0].name||'contact').replace(/\s+/g,'_')+'.vcf':name+'.vcf','text/vcard');
+}
+function dlCSV(contacts,name='contacts'){
+  if(!contacts.length) return;
+  downloadFile(toCSV(contacts),name+'.csv','text/csv');
+}
+
+el('btn-dl-vcf').addEventListener('click',()=>dlVCF(myContacts,'my_contacts'));
+el('btn-dl-csv').addEventListener('click',()=>dlCSV(myContacts,'my_contacts'));
+el('btn-team-dl-vcf').addEventListener('click',()=>dlVCF(teamContacts,'team_contacts'));
+el('btn-team-dl-csv').addEventListener('click',()=>dlCSV(teamContacts,'team_contacts'));
+el('btn-export-team-vcf').addEventListener('click',()=>dlVCF(teamContacts,'team_contacts'));
+el('btn-export-team-csv').addEventListener('click',()=>dlCSV(teamContacts,'team_contacts'));
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+el('btn-filter-toggle').addEventListener('click',()=>el('filter-bar').classList.toggle('open'));
+el('btn-filter-clear').addEventListener('click',()=>{
+  activeFilters={status:null,priority:null,followup:null,type:null,company:null,tag:null};
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  updateActiveFilterDisplay();renderList();
+});
+el('btn-search-clear').addEventListener('click',()=>{el('search-inp').value='';renderList();});
+el('search-inp').addEventListener('input',renderList);
+
+document.addEventListener('click',e=>{
+  const chip=e.target.closest('.filter-chip'); if(!chip) return;
+  const f=chip.dataset.filter, v=chip.dataset.val;
+  if(activeFilters[f]===v){ activeFilters[f]=null; chip.classList.remove('active'); }
+  else{
+    document.querySelectorAll(`.filter-chip[data-filter="${f}"]`).forEach(c=>c.classList.remove('active'));
+    activeFilters[f]=v; chip.classList.add('active');
+  }
+  updateActiveFilterDisplay(); renderList();
+});
+
+function updateActiveFilterDisplay(){
+  const bar=el('active-filters');
+  const active=Object.entries(activeFilters).filter(([,v])=>v);
+  if(!active.length){bar.style.display='none';bar.innerHTML='';return;}
+  bar.style.display='flex';
+  bar.innerHTML=active.map(([k,v])=>`
+    <span class="active-filter-chip">${k}: ${v}<button data-remove-filter="${k}">✕</button></span>`).join('');
+  bar.querySelectorAll('[data-remove-filter]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      activeFilters[btn.dataset.removeFilter]=null;
+      document.querySelectorAll(`.filter-chip[data-filter="${btn.dataset.removeFilter}"]`).forEach(c=>c.classList.remove('active'));
+      updateActiveFilterDisplay();renderList();
+    });
+  });
+}
+
+function applyFilters(contacts){
+  const today=new Date();today.setHours(0,0,0,0);
+  return contacts.filter(c=>{
+    if(activeFilters.status&&(c.status||'lead')!==activeFilters.status) return false;
+    if(activeFilters.priority&&(c.priority||'warm')!==activeFilters.priority) return false;
+    if(activeFilters.type&&c._type!==activeFilters.type) return false;
+    if(activeFilters.company&&(c.company||'').toLowerCase()!==activeFilters.company.toLowerCase()) return false;
+    if(activeFilters.tag&&!(c.tags||[]).includes(activeFilters.tag)) return false;
+    if(activeFilters.followup){
+      const fs=getFollowupStatus(c.followup);
+      if(activeFilters.followup==='overdue'&&fs!=='overdue') return false;
+      if(activeFilters.followup==='today'&&fs!=='today') return false;
+      if(activeFilters.followup==='week'&&fs!=='week'&&fs!=='today') return false;
+    }
+    return true;
+  });
+}
+
+function buildDynamicFilters(contacts){
+  const companies=[...new Set(contacts.map(c=>c.company).filter(Boolean))];
+  const tags=[...new Set(contacts.flatMap(c=>c.tags||[]))];
+  const compRow=el('filter-company-row');
+  compRow.innerHTML=companies.slice(0,10).map(co=>`<button class="filter-chip${activeFilters.company===co?' active':''}" data-filter="company" data-val="${esc(co)}">${esc(co)}</button>`).join('');
+  const tagsRow=el('filter-tags-row');
+  tagsRow.innerHTML=tags.slice(0,12).map(t=>`<button class="filter-chip${activeFilters.tag===t?' active':''}" data-filter="tag" data-val="${esc(t)}">${esc(t)}</button>`).join('');
+}
+
+// ── Render Contacts List ──────────────────────────────────────────────────────
+function renderList(){
+  const q=(el('search-inp').value||'').toLowerCase();
+  const allContacts=[...myContacts,...(isTeamMember?teamContacts:[])];
+  buildDynamicFilters(allContacts);
+  const phoneMap={};
+  allContacts.forEach(c=>{if(c.phone)phoneMap[c.phone]=(phoneMap[c.phone]||0)+1;});
+  const today=new Date();today.setHours(0,0,0,0);
+  const overdueCount=myContacts.filter(c=>c.followup&&new Date(c.followup+'T00:00:00')<today).length;
+  el('stat-total').textContent=myContacts.length;
+  el('stat-team-count').textContent=isTeamMember?teamContacts.length:'-';
+  el('stat-dups').textContent=Object.values(phoneMap).filter(v=>v>1).length;
+  el('stat-overdue').textContent=overdueCount;
+  let filtered=applyFilters(allContacts);
+  if(q) filtered=filtered.filter(c=>
+    (c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q)||
+    (c.email||'').toLowerCase().includes(q)||(c.company||'').toLowerCase().includes(q)||
+    (c.tags||[]).some(t=>t.toLowerCase().includes(q))
+  );
+  el('stat-showing').textContent=filtered.length;
+  const grid=el('contacts-grid');
+  if(allContacts.length===0){grid.innerHTML='';el('empty-contacts').style.display='block';el('no-match').style.display='none';return;}
+  el('empty-contacts').style.display='none';
+  if(filtered.length===0){grid.innerHTML='';el('no-match').style.display='block';return;}
+  el('no-match').style.display='none';
+  grid.innerHTML=filtered.map(c=>{
+    const isTeam=c._type==='team',isDup=phoneMap[c.phone]>1,isSel=selectedIds.has(c.id);
+    const fs=getFollowupStatus(c.followup);
+    return `<div class="cc${isTeam?' team-card':''}${isDup?' dup-card':''}${isSel?' selected':''}" data-cid="${esc(c.id)}">
+      <div class="chk-wrap"><div class="chk-box"></div></div>
+      ${isTeam?'<div class="c-badge badge-team">Team</div>':''}
+      ${isDup&&!isTeam?'<div class="c-badge badge-dup">Dup</div>':''}
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <div class="c-init">${getInitials(c.name)}</div>
+        <div>${prioDot(c.priority)}</div>
+      </div>
+      <div class="cname">${esc(c.name)}</div>
+      <div style="margin-bottom:5px;">${statusBadge(c.status||'lead')}</div>
+      ${c.company?`<div class="cdet"><span>🏢</span>${esc(c.company)}</div>`:''}
+      <div class="cdet"><span>📞</span>${c.phone?esc(c.phone):'—'}</div>
+      <div class="cdet"><span>✉</span>${c.email?esc(c.email):'—'}</div>
+      ${c.value?`<div class="cdet"><span>💰</span>${formatMoney(c.value)}</div>`:''}
+      ${c.followup?`<div class="cdet"><span>📅</span><span style="color:${fs==='overdue'?'var(--red)':fs==='today'?'var(--gold)':'inherit'}">${formatDate(c.followup)}${fs==='overdue'?' ⚠':''}${fs==='today'?' (Today)':''}</span></div>`:''}
+      ${(c.tags||[]).length?`<div class="tags-row">${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+      <div class="cacts">
+        ${!isTeam?`<button class="btn btn-s btn-xs" data-edit="${esc(c.id)}" data-edit-type="personal">Edit</button>`:''}
+        <button class="btn btn-s btn-xs" data-vcf="${esc(c.id)}">VCF</button>
+        <button class="btn btn-green btn-xs" data-csv="${esc(c.id)}">CSV</button>
+        ${!isTeam?`<button class="btn btn-d btn-xs" data-del="${esc(c.id)}" data-del-type="personal">Del</button>`:''}
+        ${isTeam&&isAdmin?`<button class="btn btn-d btn-xs" data-del="${esc(c.id)}" data-del-type="team">Del</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Contacts Grid Click ───────────────────────────────────────────────────────
+el('contacts-grid').addEventListener('pointerdown',e=>{
+  const card=e.target.closest('[data-cid]'); if(!card) return;
+  if(selectionMode) return;
+  longPressTimer=setTimeout(()=>{longPressTimer=null;enterSelMode(card.dataset.cid);},500);
+});
+el('contacts-grid').addEventListener('pointerup',()=>clearTimeout(longPressTimer));
+el('contacts-grid').addEventListener('pointercancel',()=>clearTimeout(longPressTimer));
+el('contacts-grid').addEventListener('pointermove',()=>clearTimeout(longPressTimer));
+
+el('contacts-grid').addEventListener('click',e=>{
+  const btn=e.target.closest('button'),card=e.target.closest('[data-cid]');
+  if(selectionMode){if(card)toggleSel(card.dataset.cid);return;}
+  if(!btn) return;
+  const c=[...myContacts,...teamContacts].find(x=>x.id===btn.dataset.vcf||x.id===btn.dataset.csv||x.id===btn.dataset.edit||x.id===btn.dataset.del);
+  if(btn.dataset.vcf&&c) dlVCF([c]);
+  else if(btn.dataset.csv&&c) dlCSV([c],c.name||'contact');
+  else if(btn.dataset.edit) openEdit(btn.dataset.edit,'personal');
+  else if(btn.dataset.del) openDelete(btn.dataset.del,btn.dataset.delType);
+},true);
+
+// ── Selection Mode ────────────────────────────────────────────────────────────
+function enterSelMode(id){
+  selectionMode=true; selectedIds.clear(); selectedIds.add(id);
+  el('contacts-grid').classList.add('selection-mode');
+  el('sel-bar').classList.add('active');
+  el('sel-team').style.display=isTeamMember?'inline-flex':'none';
+  renderList(); updateSelCount();
+}
+function exitSelMode(){
+  selectionMode=false; selectedIds.clear();
+  el('contacts-grid').classList.remove('selection-mode');
+  el('sel-bar').classList.remove('active');
+  renderList();
+}
+function toggleSel(id){
+  if(selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  const card=el('contacts-grid').querySelector(`[data-cid="${id}"]`);
+  if(card) card.classList.toggle('selected',selectedIds.has(id));
+  updateSelCount();
+  if(selectedIds.size===0) exitSelMode();
+}
+function updateSelCount(){ el('sel-count').textContent=selectedIds.size+' selected'; }
+
+el('sel-cancel').addEventListener('click',exitSelMode);
+el('sel-all').addEventListener('click',()=>{
+  [...myContacts,...(isTeamMember?teamContacts:[])].forEach(c=>selectedIds.add(c.id));
+  renderList(); updateSelCount();
+});
+el('sel-vcf').addEventListener('click',()=>{
+  const sel=[...myContacts,...teamContacts].filter(c=>selectedIds.has(c.id));
+  if(!sel.length){toast('Nothing selected','warn');return;}
+  dlVCF(sel,'selected_contacts'); toast('✓ Downloaded '+sel.length+' as VCF'); exitSelMode();
+});
+el('sel-csv').addEventListener('click',()=>{
+  const sel=[...myContacts,...teamContacts].filter(c=>selectedIds.has(c.id));
+  if(!sel.length){toast('Nothing selected','warn');return;}
+  dlCSV(sel,'selected_contacts'); toast('✓ Downloaded '+sel.length+' as CSV'); exitSelMode();
+});
+el('sel-delete').addEventListener('click',async()=>{
+  const sel=[...myContacts,...teamContacts].filter(c=>selectedIds.has(c.id));
+  if(!sel.length){toast('Nothing selected','warn');return;}
+  if(!confirm('Delete '+sel.length+' contacts? Cannot be undone.')) return;
+  for(const c of sel){
+    try{ await deleteDoc(c._type==='team'?doc(db,'team','contacts','items',c.id):doc(db,'users',currentUser.uid,'contacts',c.id)); }
+    catch(e){}
+  }
+  toast('🗑 Deleted '+sel.length,'error'); exitSelMode();
+});
+el('sel-team').addEventListener('click',async()=>{
+  const sel=myContacts.filter(c=>selectedIds.has(c.id));
+  if(!sel.length){toast('Select personal contacts to add to team','warn');return;}
+  for(const c of sel){
+    await addDoc(collection(db,'team','contacts','items'),{
+      name:c.name,phone:c.phone,email:c.email,company:c.company||'',notes:c.notes||'',
+      addedBy:currentUser.email,createdAt:serverTimestamp()
+    });
+  }
+  toast('✓ Added '+sel.length+' to team'); exitSelMode();
+});
+
+// ── Team Tab ──────────────────────────────────────────────────────────────────
+function renderTeam(){
+  const grid=el('team-grid');
+  if(!teamContacts.length){grid.innerHTML='';el('empty-team').style.display='block';return;}
+  el('empty-team').style.display='none';
+  grid.innerHTML=teamContacts.map(c=>{
+    const isSel=teamSelectedIds.has(c.id);
+    return `<div class="cc team-card${isSel?' selected':''}" data-cid="${esc(c.id)}">
+      <div class="chk-wrap"><div class="chk-box"></div></div>
+      <div class="c-badge badge-team">Team</div>
+      <div class="c-init">${getInitials(c.name)}</div>
+      <div class="cname">${esc(c.name)}</div>
+      ${c.company?`<div class="cdet"><span>🏢</span>${esc(c.company)}</div>`:''}
+      <div class="cdet"><span>📞</span>${c.phone?esc(c.phone):'—'}</div>
+      <div class="cdet"><span>✉</span>${c.email?esc(c.email):'—'}</div>
+      <div class="cacts">
+        <button class="btn btn-s btn-xs" data-vcf="${esc(c.id)}">VCF</button>
+        <button class="btn btn-green btn-xs" data-csv="${esc(c.id)}">CSV</button>
+        <button class="btn btn-s btn-xs" data-pull="${esc(c.id)}">→ Mine</button>
+        ${isAdmin?`<button class="btn btn-d btn-xs" data-del="${esc(c.id)}" data-del-type="team">Del</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+el('team-grid').addEventListener('pointerdown',e=>{
+  const card=e.target.closest('[data-cid]'); if(!card||teamSelectionMode) return;
+  teamLongPressTimer=setTimeout(()=>{teamLongPressTimer=null;enterTeamSelMode(card.dataset.cid);},500);
+});
+el('team-grid').addEventListener('pointerup',()=>clearTimeout(teamLongPressTimer));
+el('team-grid').addEventListener('pointercancel',()=>clearTimeout(teamLongPressTimer));
+el('team-grid').addEventListener('pointermove',()=>clearTimeout(teamLongPressTimer));
+
+el('team-grid').addEventListener('click',e=>{
+  const btn=e.target.closest('button'),card=e.target.closest('[data-cid]');
+  if(teamSelectionMode){if(card)toggleTeamSel(card.dataset.cid);return;}
+  if(!btn) return;
+  const c=teamContacts.find(x=>x.id===btn.dataset.vcf||x.id===btn.dataset.csv||x.id===btn.dataset.pull||x.id===btn.dataset.del);
+  if(btn.dataset.vcf&&c) dlVCF([c]);
+  else if(btn.dataset.csv&&c) dlCSV([c],c.name||'contact');
+  else if(btn.dataset.pull&&c){
+    addDoc(collection(db,'users',currentUser.uid,'contacts'),{
+      name:c.name,phone:c.phone,email:c.email,company:c.company||'',
+      notes:c.notes||'',tags:[],status:'lead',priority:'warm',value:'',followup:'',activities:[],createdAt:serverTimestamp()
+    }).then(()=>toast('✓ Copied to your contacts'));
+  }
+  else if(btn.dataset.del) openDelete(btn.dataset.del,'team');
+},true);
+
+function enterTeamSelMode(id){
+  teamSelectionMode=true; teamSelectedIds.clear(); teamSelectedIds.add(id);
+  el('team-grid').classList.add('selection-mode');
+  el('team-sel-bar').classList.add('active');
+  el('team-sel-delete').style.display=isAdmin?'inline-flex':'none';
+  renderTeam(); updateTeamSelCount();
+}
+function exitTeamSelMode(){
+  teamSelectionMode=false; teamSelectedIds.clear();
+  el('team-grid').classList.remove('selection-mode');
+  el('team-sel-bar').classList.remove('active');
+  renderTeam();
+}
+function toggleTeamSel(id){
+  if(teamSelectedIds.has(id)) teamSelectedIds.delete(id); else teamSelectedIds.add(id);
+  const card=el('team-grid').querySelector(`[data-cid="${id}"]`);
+  if(card) card.classList.toggle('selected',teamSelectedIds.has(id));
+  updateTeamSelCount();
+  if(teamSelectedIds.size===0) exitTeamSelMode();
+}
+function updateTeamSelCount(){ el('team-sel-count').textContent=teamSelectedIds.size+' selected'; }
+
+el('team-sel-cancel').addEventListener('click',exitTeamSelMode);
+el('team-sel-all').addEventListener('click',()=>{ teamContacts.forEach(c=>teamSelectedIds.add(c.id)); renderTeam(); updateTeamSelCount(); });
+el('team-sel-vcf').addEventListener('click',()=>{ const sel=teamContacts.filter(c=>teamSelectedIds.has(c.id)); dlVCF(sel,'team_selected'); toast('✓ Downloaded '+sel.length+' as VCF'); exitTeamSelMode(); });
+el('team-sel-csv').addEventListener('click',()=>{ const sel=teamContacts.filter(c=>teamSelectedIds.has(c.id)); dlCSV(sel,'team_selected'); toast('✓ Downloaded '+sel.length+' as CSV'); exitTeamSelMode(); });
+el('team-sel-delete').addEventListener('click',async()=>{
+  if(!isAdmin){toast('Admins only','error');return;}
+  const sel=teamContacts.filter(c=>teamSelectedIds.has(c.id));
+  if(!confirm('Delete '+sel.length+' team contacts?')) return;
+  for(const c of sel){ try{await deleteDoc(doc(db,'team','contacts','items',c.id));}catch(e){} }
+  toast('🗑 Deleted '+sel.length,'error'); exitTeamSelMode();
+});
+el('team-sel-mine').addEventListener('click',async()=>{
+  const sel=teamContacts.filter(c=>teamSelectedIds.has(c.id));
+  for(const c of sel){
+    await addDoc(collection(db,'users',currentUser.uid,'contacts'),{
+      name:c.name,phone:c.phone,email:c.email,company:c.company||'',
+      notes:c.notes||'',tags:[],status:'lead',priority:'warm',value:'',followup:'',activities:[],createdAt:serverTimestamp()
+    });
+  }
+  toast('✓ Copied '+sel.length+' to your contacts'); exitTeamSelMode();
+});
+
+el('btn-add-team-contact').addEventListener('click',()=>el('team-add-modal').classList.add('open'));
+el('btn-tc-cancel').addEventListener('click',()=>el('team-add-modal').classList.remove('open'));
+el('btn-tc-save').addEventListener('click',async()=>{
+  const name=gv('tc-name'),phone=gv('tc-phone'),email=gv('tc-email'),company=gv('tc-company');
+  let ok=true;
+  if(!name){showErr('tc-name');ok=false;}
+  if(!phone){showErr('tc-phone');ok=false;}
+  if(!ok) return;
+  await addDoc(collection(db,'team','contacts','items'),{name,phone,email,company,addedBy:currentUser.email,createdAt:serverTimestamp()});
+  sv('tc-name','');sv('tc-phone','');sv('tc-email','');sv('tc-company','');
+  el('team-add-modal').classList.remove('open');
+  toast('✓ Added to team contacts');
+});
+
+// ── Pipeline ─────────────────────────────────────────────────────────────────
+function renderPipeline(){
+  const board=el('pipeline-board');
+  const openStages=['lead','contacted','qualified','proposal'];
+  let totalPipeline=0;
+  board.innerHTML=STAGES.map(stage=>{
+    const contacts=myContacts.filter(c=>(c.status||'lead')===stage);
+    const stageVal=contacts.reduce((s,c)=>s+Number(c.value||0),0);
+    if(openStages.includes(stage)) totalPipeline+=stageVal;
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-title" style="color:${STAGE_COLORS[stage]};">
+        ${STAGE_LABELS[stage]}
+        <span class="pipeline-val-total">${stageVal?formatMoney(stageVal):contacts.length+' contact'+(contacts.length!==1?'s':'')}</span>
+      </div>
+      ${contacts.length?contacts.map(c=>`
+        <div class="pipeline-card" data-edit="${esc(c.id)}" data-edit-type="personal">
+          <div class="pc-name">${esc(c.name)}</div>
+          ${c.company?`<div class="pc-co">${esc(c.company)}</div>`:''}
+          ${c.value?`<div class="pc-val">${formatMoney(c.value)}</div>`:''}
+          ${(c.tags||[]).length?`<div class="tags-row" style="margin-top:6px;">${(c.tags||[]).slice(0,2).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+        </div>`).join(''):`<div class="empty-col">No contacts</div>`}
+    </div>`;
+  }).join('');
+  el('pipeline-total').textContent=formatMoney(totalPipeline)||'$0';
+  board.addEventListener('click',e=>{
+    const card=e.target.closest('[data-edit]');
+    if(card) openEdit(card.dataset.edit,'personal');
+  },{once:true});
+}
+el('btn-pipeline-refresh').addEventListener('click',renderPipeline);
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+function renderAnalytics(){
+  const all=myContacts;
+  const total=all.length+(isTeamMember?teamContacts.length:0);
+  const pipeline=all.filter(c=>['lead','contacted','qualified','proposal'].includes(c.status||'lead'));
+  const won=all.filter(c=>c.status==='won');
+  const lost=all.filter(c=>c.status==='lost');
+  const pipelineVal=pipeline.reduce((s,c)=>s+Number(c.value||0),0);
+  const wonVal=won.reduce((s,c)=>s+Number(c.value||0),0);
+  const winRate=won.length+lost.length>0?Math.round(won.length/(won.length+lost.length)*100):0;
+  const hot=all.filter(c=>c.priority==='hot').length;
+  const today=new Date();today.setHours(0,0,0,0);
+  const overdue=all.filter(c=>c.followup&&new Date(c.followup+'T00:00:00')<today).length;
+  el('an-total').textContent=total;
+  el('an-pipeline').textContent=formatMoney(pipelineVal)||'$0';
+  el('an-won').textContent=formatMoney(wonVal)||'$0';
+  el('an-winrate').textContent=winRate+'%';
+  el('an-hot').textContent=hot;
+  el('an-overdue').textContent=overdue;
+  // Funnel
+  const funnelEl=el('funnel-chart');
+  const maxCount=Math.max(...STAGES.map(s=>all.filter(c=>(c.status||'lead')===s).length),1);
+  funnelEl.innerHTML=STAGES.map(s=>{
+    const count=all.filter(c=>(c.status||'lead')===s).length;
+    const pct=Math.round(count/maxCount*100);
+    return `<div class="funnel-row">
+      <span class="funnel-label">${STAGE_LABELS[s]}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${STAGE_COLORS[s]};"></div></div>
+      <span class="funnel-count">${count}</span>
+    </div>`;
+  }).join('');
+  // Company
+  const companies={};
+  all.forEach(c=>{if(c.company)companies[c.company]=(companies[c.company]||0)+1;});
+  const sortedCo=Object.entries(companies).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxCo=sortedCo[0]?.[1]||1;
+  el('company-chart').innerHTML=sortedCo.length?sortedCo.map(([co,n])=>`
+    <div class="funnel-row">
+      <span class="funnel-label" style="font-size:10px;">${esc(co.slice(0,12))}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.round(n/maxCo*100)}%;background:var(--team);"></div></div>
+      <span class="funnel-count">${n}</span>
+    </div>`).join(''):'<div style="font-size:12px;color:var(--muted);">No company data yet</div>';
+  // Tags
+  const tagMap={};
+  all.forEach(c=>(c.tags||[]).forEach(t=>{tagMap[t]=(tagMap[t]||0)+1;}));
+  const sortedTags=Object.entries(tagMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxTag=sortedTags[0]?.[1]||1;
+  el('tags-chart').innerHTML=sortedTags.length?sortedTags.map(([t,n])=>`
+    <div class="funnel-row">
+      <span class="funnel-label" style="font-size:10px;">${esc(t.slice(0,12))}</span>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.round(n/maxTag*100)}%;background:var(--gold);"></div></div>
+      <span class="funnel-count">${n}</span>
+    </div>`).join(''):'<div style="font-size:12px;color:var(--muted);">No tags yet</div>';
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+function openEdit(id,type){
+  const contacts=type==='team'?teamContacts:myContacts;
+  const c=contacts.find(x=>x.id===id); if(!c) return;
+  editCurrentId=id;
+  sv('edit-id',id);sv('edit-type',type);sv('edit-name',c.name);sv('edit-phone',c.phone);
+  sv('edit-email',c.email);sv('edit-company',c.company||'');sv('edit-notes',c.notes||'');
+  sv('edit-tags',(c.tags||[]).join(', '));sv('edit-value',c.value||'');sv('edit-followup',c.followup||'');
+  if(el('edit-status')) el('edit-status').value=c.status||'lead';
+  if(el('edit-priority')) el('edit-priority').value=c.priority||'warm';
+  renderActivityLog(c.activities||[]);
+  el('edit-modal').classList.add('open');
+}
+
+function renderActivityLog(activities){
+  const icons={note:'📝',call:'📞',meeting:'🤝',email:'✉️',whatsapp:'💬'};
+  el('activity-list').innerHTML=activities.length?[...activities].reverse().map(a=>`
+    <div class="activity-item">
+      <span class="act-icon">${icons[a.type]||'📝'}</span>
+      <div class="act-body">
+        <div class="act-note">${esc(a.note)}</div>
+        <div class="act-meta"><span class="act-type">${a.type}</span> · ${a.date||''}</div>
+      </div>
+    </div>`).join(''):'<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px 0;">No activity yet</div>';
+}
+
+el('btn-act-add').addEventListener('click',async()=>{
+  const note=gv('act-note-inp'),type=el('act-type-sel').value;
+  if(!note){toast('Enter a note','warn');return;}
+  const id=gv('edit-id');
+  const c=myContacts.find(x=>x.id===id); if(!c) return;
+  const activities=c.activities||[];
+  activities.push({type,note,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})});
+  await setDoc(doc(db,'users',currentUser.uid,'contacts',id),{activities},{merge:true});
+  sv('act-note-inp','');
+  renderActivityLog(activities);
+  toast('✓ Activity logged');
+});
+
+el('btn-edit-save').addEventListener('click',async()=>{
+  const id=gv('edit-id'),type=gv('edit-type'),name=gv('edit-name'),phone=gv('edit-phone');
+  const email=gv('edit-email'),company=gv('edit-company'),notes=gv('edit-notes');
+  const tags=parseTags(gv('edit-tags')),status=el('edit-status').value,priority=el('edit-priority').value;
+  const value=gv('edit-value'),followup=gv('edit-followup');
+  let ok=true;
+  if(!name){showErr('edit-name');ok=false;}
+  if(!phone){showErr('edit-phone');ok=false;}
+  if(!ok) return;
+  try{
+    const ref=type==='team'?doc(db,'team','contacts','items',id):doc(db,'users',currentUser.uid,'contacts',id);
+    await setDoc(ref,{name,phone,email,company,notes,tags,status,priority,value,followup},{merge:true});
+    el('edit-modal').classList.remove('open');
+    toast('✓ Updated');
+  }catch(e){toast('Failed: '+e.message,'error');}
+});
+el('btn-edit-cancel').addEventListener('click',()=>el('edit-modal').classList.remove('open'));
+el('edit-modal').addEventListener('click',e=>{if(e.target===el('edit-modal'))el('edit-modal').classList.remove('open');});
+['edit-name','edit-phone'].forEach(id=>el(id).addEventListener('input',()=>clearErr(id)));
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function openDelete(id,type){
+  const contacts=type==='team'?teamContacts:myContacts;
+  const c=contacts.find(x=>x.id===id); if(!c) return;
+  deleteTargetId=id; deleteTargetType=type;
+  el('del-name').textContent=c.name;
+  el('del-modal').classList.add('open');
+}
+el('btn-del-confirm').addEventListener('click',async()=>{
+  try{
+    const ref=deleteTargetType==='team'?doc(db,'team','contacts','items',deleteTargetId):doc(db,'users',currentUser.uid,'contacts',deleteTargetId);
+    await deleteDoc(ref);
+    el('del-modal').classList.remove('open');
+    toast('Deleted','error');
+  }catch(e){toast('Failed: '+e.message,'error');}
+});
+el('btn-del-cancel').addEventListener('click',()=>el('del-modal').classList.remove('open'));
+el('del-modal').addEventListener('click',e=>{if(e.target===el('del-modal'))el('del-modal').classList.remove('open');});
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+async function renderMembers(){
+  const snap=await getDoc(doc(db,'team','members'));
+  if(!snap.exists()){el('members-list').innerHTML='<div style="font-size:12px;color:var(--muted);">No members yet.</div>';return;}
+  const members=snap.data().list||[];
+  el('members-list').innerHTML=members.map((m,i)=>`
+    <div class="member-row">
+      <div class="member-email">${esc(m.email)}</div>
+      <div class="role-pill ${m.role==='admin'?'role-admin':'role-member'}">${m.role}</div>
+      ${m.email!==currentUser.email?`<button class="btn btn-d btn-xs" data-remove-idx="${i}">Remove</button>`:'<span style="font-size:10px;color:var(--muted);">You</span>'}
+    </div>`).join('');
+}
+el('members-list').addEventListener('click',async e=>{
+  const btn=e.target.closest('[data-remove-idx]'); if(!btn||!isAdmin) return;
+  const idx=parseInt(btn.dataset.removeIdx);
+  const snap=await getDoc(doc(db,'team','members')); if(!snap.exists()) return;
+  const members=snap.data().list||[];
+  members.splice(idx,1);
+  await setDoc(doc(db,'team','members'),{list:members});
+  toast('Member removed'); renderMembers();
+});
+el('btn-add-member').addEventListener('click',async()=>{
+  if(!isAdmin){toast('Not authorized','error');return;}
+  const email=gv('admin-email-inp'),role=el('
